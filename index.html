@@ -606,18 +606,16 @@
     set('cross-pct',     pct(crossPct));
     set('cross-usd',     fmt(crossUsd));
 
-    // === COMPARATIVA ===
-    set('c-b-base',      fmt(bBasebs, 0) + ' Bs');
-    set('c-b30',         fmt(b30bs, 0) + ' Bs / ' + pct(b30pct));
-    set('c-b95',         fmt(b95bs, 0) + ' Bs / ' + pct(b95pct));
-    set('c-b150',        fmt(b150bs, 0) + ' Bs / ' + pct(b150pct));
-    set('c-n-base',      fmt(nBaseUsd) + '$');
-    set('c-n27',         fmt(n27usd) + '$ / ' + pct(n27pct));
-    set('c-n27-bcv-pct', fmt(n27bsBcv, 0) + ' Bs / ' + pct(n27bcvPct));
-    set('c-n95',         fmt(n95bsBcv, 0) + ' Bs / ' + pct(n95pct));
-    set('c-n150',        fmt(n150bsBcv, 0) + ' Bs / ' + pct(n150pct));
-    set('cc-bs',         fmt(n150bsBcv, 0));
-    set('cc-pct',        pct(crossPct));
+// === COMPARATIVA ===
+set('c-b-base',      fmt(bBasebs, 0) + ' Bs');
+set('c-b30',          fmt(b30bs, 0) + ' Bs / ' + pct(b30pct));
+set('c-b95',          fmt(b95bs, 0) + ' Bs / ' + pct(b95pct));
+set('c-b150',         fmt(b150bs, 0) + ' Bs / ' + pct(b150pct));
+set('c-n-base',      fmt(nBaseUsd) + '$');
+set('c-n27',         fmt(n27bsBcv, 0) + ' Bs / ' + fmt(n27usd) + '$ / ' + pct(n27pct)); 
+set('c-n27-bcv-pct', fmt(n27bsBcv, 0) + ' Bs / ' + pct(n27bcvPct));
+set('c-n95',         fmt(n95bsBcv, 0) + ' Bs / ' + pct(n95pct));
+set('c-n150',        fmt(n150bsBcv, 0) + ' Bs / ' + pct(n150pct));
   }
 
   calc();
