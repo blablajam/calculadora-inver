@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora BCV / Binance</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f4;
+      --bg-info: #e6f1fb;
+      --bg-success: #eaf3de;
+      --bg-warning: #faeeda;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6b6b;
+      --text-tertiary: #9b9b9b;
+      --text-info: #185fa5;
+      --text-success: #3b6d11;
+      --text-warning: #854f0b;
+      --border: #e0e0e0;
+      --border-strong: #c0c0c0;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #1c1c1c;
+        --bg-secondary: #2a2a2a;
+        --bg-info: #0c2a45;
+        --bg-success: #172d0a;
+        --bg-warning: #3a2204;
+        --text-primary: #f0f0f0;
+        --text-secondary: #a0a0a0;
+        --text-tertiary: #666666;
+        --text-info: #85b7eb;
+        --text-success: #97c459;
+        --text-warning: #ef9f27;
+        --border: #333333;
+        --border-strong: #555555;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      color: var(--text-primary);
+      background: var(--bg-secondary);
+      min-height: 100vh;
+      padding: 1.5rem 1rem;
+    }
+
+    .app { max-width: 720px; margin: 0 auto; }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 0.75rem;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+
+    .field label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .field input {
+      height: 36px;
+      padding: 0 10px;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-strong);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field input:focus { border-color: var(--text-info); }
+
+    .hint { font-size: 12px; color: var(--text-tertiary); }
+
+    /* Price tabs */
+    .price-tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
+
+    .price-tab {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 0.5px solid var(--border-strong);
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+
+    .price-tab.active {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      border-color: var(--text-primary);
+    }
+
+    /* Nav tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+
+    .tab {
+      padding: 6px 16px;
+      border-radius: var(--radius-md);
+      border: 0.5px solid var(--border-strong);
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+
+    .tab.active {
+      background: var(--bg-info);
+      color: var(--text-info);
+      border-color: var(--text-info);
+    }
+
+    /* Results grid */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 0.5rem;
+    }
+
+    .metric {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 12px;
+    }
+
+    .metric.accent-blue { background: var(--bg-info); }
+    .metric.accent-green { background: var(--bg-success); }
+    .metric.accent-warn { background: var(--bg-warning); }
+
+    .metric .mlabel {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .metric.accent-blue .mlabel { color: var(--text-info); }
+    .metric.accent-green .mlabel { color: var(--text-success); }
+    .metric.accent-warn .mlabel { color: var(--text-warning); }
+
+    .metric .mval {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .metric.accent-blue .mval { color: var(--text-info); }
+    .metric.accent-green .mval { color: var(--text-success); }
+    .metric.accent-warn .mval { color: var(--text-warning); }
+
+    .metric .msub {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 0.5px solid var(--border);
+      margin: 1rem 0;
+    }
+
+    .row-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      margin-top: 1rem;
+    }
+
+    /* Comparative view */
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .compare-col { display: flex; flex-direction: column; gap: 8px; }
+
+    .compare-header {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 6px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+    }
+
+    .compare-header.blue { background: var(--bg-info); color: var(--text-info); }
+    .compare-header.green { background: var(--bg-success); color: var(--text-success); }
+
+    .mini-metric {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-metric .mm-label { font-size: 11px; color: var(--text-secondary); flex: 1; }
+    .mini-metric .mm-val { font-size: 13px; font-weight: 500; color: var(--text-primary); text-align: right; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1>Calculadora BCV / Binance</h1>
+
+  <!-- Config -->
+  <div class="card">
+    <div class="section-title">Configuración de tasas y precios</div>
+    <div class="inputs-grid">
+      <div class="field">
+        <label>Tasa BCV (Bs/$)</label>
+        <input type="number" id="bcv" value="490" step="0.01" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>Tasa Binance (Bs/$)</label>
+        <input type="number" id="bin" value="510" step="0.01" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>Precio A – proveedor ($)</label>
+        <input type="number" id="pA" value="100" step="0.01" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>Precio B – proveedor ($)</label>
+        <input type="number" id="pB" value="85" step="0.01" oninput="calc()">
+      </div>
+    </div>
+    <p class="hint">Descuento Binance: <strong>-28%</strong> &nbsp;|&nbsp; Ganancias BCV: +30%, +95%, +150% &nbsp;|&nbsp; Ganancia Binance: +27%</p>
+  </div>
+
+  <!-- Price selector -->
+  <div class="price-tabs">
+    <button class="price-tab active" onclick="setPriceTab('A', this)">Precio A</button>
+    <button class="price-tab" onclick="setPriceTab('B', this)">Precio B</button>
+  </div>
+
+  <!-- Nav tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('bcv', this)">Ruta BCV</button>
+    <button class="tab" onclick="setTab('bin', this)">Ruta Binance</button>
+    <button class="tab" onclick="setTab('compare', this)">Comparativa</button>
+  </div>
+
+  <!-- PANEL BCV -->
+  <div id="panel-bcv">
+    <div class="card">
+      <div class="section-title">Ruta BCV — pago al proveedor en bolívares</div>
+
+      <div class="row-label">Costo base en Bs</div>
+      <div class="results-grid">
+        <div class="metric accent-blue">
+          <div class="mlabel">Precio ($) × tasa BCV</div>
+          <div class="mval" id="b-base-bs">—</div>
+          <div class="msub">Bs</div>
+        </div>
+        <div class="metric">
+          <div class="mlabel">Costo en $ (referencia)</div>
+          <div class="mval" id="b-base-usd">—</div>
+          <div class="msub">USD</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="row-label">Venta con +30% ganancia BCV</div>
+      <div class="results-grid">
+        <div class="metric">
+          <div class="mlabel">Precio venta (Bs)</div>
+          <div class="mval" id="b30-bs">—</div>
+          <div class="msub">Bs</div>
+        </div>
+        <div class="metric">
+          <div class="mlabel">Precio venta ($) / BCV</div>
+          <div class="mval" id="b30-usd-bcv">—</div>
+          <div class="msub">USD equivalente BCV</div>
+        </div>
+        <div class="metric accent-warn">
+          <div class="mlabel">% ganancia real sobre precio ($)</div>
+          <div class="mval" id="b30-pct">—</div>
+          <div class="msub">vs precio base $</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="row-label">Venta con +95% ganancia BCV</div>
+      <div class="results-grid">
+        <div class="metric">
+          <div class="mlabel">Precio venta (Bs)</div>
+          <div class="mval" id="b95-bs">—</div>
+          <div class="msub">Bs</div>
+        </div>
+        <div class="metric">
+          <div class="mlabel">Precio venta ($) / BCV</div>
+          <div class="mval" id="b95-usd-bcv">—</div>
+          <div class="msub">USD equivalente BCV</div>
+        </div>
+        <div class="metric accent-warn">
+          <div class="mlabel">% ganancia real sobre precio ($)</div>
+          <div class="mval" id="b95-pct">—</div>
+          <div class="msub">vs precio base $</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="row-label">Venta con +150% ganancia BCV</div>
+      <div class="results-grid">
+        <div class="metric">
+          <div class="mlabel">Precio venta (Bs)</div>
+          <div class="mval" id="b150-bs">—</div>
+          <div class="msub">Bs</div>
+        </div>
+        <div class="metric">
+          <div class="mlabel">Precio venta ($) / BCV</div>
+          <div class="mval" id="b150-usd-bcv">—</div>
+          <div class="msub">USD equivalente BCV</div>
+        </div>
+        <div class="metric accent-green">
+          <div class="mlabel">% ganancia real sobre precio ($)</div>
+          <div class="mval" id="b150-pct">—</div>
+          <div class="msub">vs precio base $</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL BINANCE -->
+  <div id="panel-bin" style="display:none">
+    <div class="card">
+      <div class="section-title">Ruta Binance — pago con descuento -28%</div>
+
+      <div class="row-label">Costo real con descuento</div>
+      <div class="results-grid">
+        <div class="metric accent-blue">
+          <div class="mlabel">Precio ($) con -28%</div>
+          <div class="mval" id="n-base-usd">—</div>
+          <div class="msub">USD efectivo</div>
+        </div>
+        <div class="metric">
+          <div class="mlabel">Costo en Bs (× Binance)</div>
+          <div class="mval" id="n-base-bs-bin">—</div>
+          <div class="msub">Bs</div>
+        </div>
+        <div class="metric">
+          <div class="mlabel">Costo en Bs (× BCV)</div>
+          <div class="mval" id="n-base-bs-bcv">—</div>
+          <div class="msub">Bs</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="row-label">Venta con +27% (Binance / divisa)</div>
+      <div class="results-grid">
+        <div class="metric">
+          <div class="mlabel">Precio venta ($)</div>
+          <div class="mval" id="n27-usd">—</div>
+          <div class="msub">USD</div>
+        </div>
+        <div class="metric">
+          <div class="mlabel">Precio venta Bs (× Binance)</div>
+          <div class="mval" id="n27-bs-bin">—</div>
+          <div class="msub">Bs</div>
+        </div>
+        <div class="metric accent-warn">
+          <div class="mlabel">% ganancia real vs precio original $</div>
+          <div class="mval" id="n27-pct">—</div>
+          <div class="msub">vs precio base $</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="row-label">+27% Binance — equivalente en BCV</div>
+      <div class="results-grid">
+        <div class="metric">
+          <div class="mlabel">Precio venta Bs (× BCV)</div>
+          <div class="mval" id="n27-bs-bcv">—</div>
+          <div class="msub">Bs</div>
+        </div>
+        <div class="metric accent-warn">
+          <div class="mlabel">% ganancia real equiv. BCV vs precio base $</div>
+          <div class="mval" id="n27-bcv-pct">—</div>
+          <div class="msub">% equivalente BCV</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="row-label">Venta con +95% BCV (base descontada)</div>
+      <div class="results-grid">
+        <div class="metric">
+          <div class="mlabel">Precio venta Bs (× BCV)</div>
+          <div class="mval" id="n95-bs-bcv">—</div>
+          <div class="msub">Bs</div>
+        </div>
+        <div class="metric">
+          <div class="mlabel">Equivalente $ / BCV</div>
+          <div class="mval" id="n95-usd-bcv">—</div>
+          <div class="msub">USD</div>
+        </div>
+        <div class="metric accent-warn">
+          <div class="mlabel">% ganancia real vs precio original $</div>
+          <div class="mval" id="n95-pct">—</div>
+          <div class="msub">vs precio base $</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="row-label">Venta con +150% BCV (base descontada)</div>
+      <div class="results-grid">
+        <div class="metric">
+          <div class="mlabel">Precio venta Bs (× BCV)</div>
+          <div class="mval" id="n150-bs-bcv">—</div>
+          <div class="msub">Bs</div>
+        </div>
+        <div class="metric">
+          <div class="mlabel">Equivalente $ / BCV</div>
+          <div class="mval" id="n150-usd-bcv">—</div>
+          <div class="msub">USD</div>
+        </div>
+        <div class="metric accent-green">
+          <div class="mlabel">% ganancia real vs precio original $</div>
+          <div class="mval" id="n150-pct">—</div>
+          <div class="msub">vs precio base $</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="row-label">Referencia cruzada: ¿qué % equivale en ruta BCV?</div>
+      <div class="results-grid">
+        <div class="metric">
+          <div class="mlabel">Bs Binance+150% ÷ BCV → % equivalente BCV</div>
+          <div class="mval" id="cross-pct">—</div>
+          <div class="msub">% de ganancia si hubieras pagado en BCV</div>
+        </div>
+        <div class="metric">
+          <div class="mlabel">Precio $ equivalente BCV</div>
+          <div class="mval" id="cross-usd">—</div>
+          <div class="msub">USD que representaría en BCV</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL COMPARATIVA -->
+  <div id="panel-compare" style="display:none">
+    <div class="card">
+      <div class="section-title">Vista comparativa — BCV vs Binance</div>
+      <div class="compare-grid">
+        <div class="compare-col">
+          <div class="compare-header blue">Ruta BCV (pago directo $)</div>
+          <div class="mini-metric"><span class="mm-label">Costo base Bs</span><span class="mm-val" id="c-b-base">—</span></div>
+          <div class="mini-metric"><span class="mm-label">+30% → Bs / % real</span><span class="mm-val" id="c-b30">—</span></div>
+          <div class="mini-metric"><span class="mm-label">+95% → Bs / % real</span><span class="mm-val" id="c-b95">—</span></div>
+          <div class="mini-metric"><span class="mm-label">+150% → Bs / % real</span><span class="mm-val" id="c-b150">—</span></div>
+        </div>
+        <div class="compare-col">
+          <div class="compare-header green">Ruta Binance (-28% descuento)</div>
+          <div class="mini-metric"><span class="mm-label">Costo real $ (desc.)</span><span class="mm-val" id="c-n-base">—</span></div>
+          <div class="mini-metric"><span class="mm-label">+27% → $ / % real</span><span class="mm-val" id="c-n27">—</span></div>
+          <div class="mini-metric"><span class="mm-label">+27% equiv. BCV → Bs / %</span><span class="mm-val" id="c-n27-bcv-pct">—</span></div>
+          <div class="mini-metric"><span class="mm-label">+95% BCV → Bs / % real</span><span class="mm-val" id="c-n95">—</span></div>
+          <div class="mini-metric"><span class="mm-label">+150% BCV → Bs / % real</span><span class="mm-val" id="c-n150">—</span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="row-label">Referencia cruzada Binance+150% → equivalente BCV</div>
+      <div class="results-grid">
+        <div class="metric accent-green">
+          <div class="mlabel">Bs total Binance+150%</div>
+          <div class="mval" id="cc-bs">—</div>
+          <div class="msub">Bs</div>
+        </div>
+        <div class="metric accent-green">
+          <div class="mlabel">Equivale a % ganancia si pagaste en BCV</div>
+          <div class="mval" id="cc-pct">—</div>
+          <div class="msub">% sobre precio base $</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let activePrice = 'A';
+
+  function setPriceTab(p, el) {
+    activePrice = p;
+    document.querySelectorAll('.price-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    calc();
+  }
+
+  function setTab(t, el) {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('panel-bcv').style.display = t === 'bcv' ? '' : 'none';
+    document.getElementById('panel-bin').style.display = t === 'bin' ? '' : 'none';
+    document.getElementById('panel-compare').style.display = t === 'compare' ? '' : 'none';
+  }
+
+  function fmt(n, dec = 2) {
+    return n.toLocaleString('es-VE', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+  function pct(n) { return fmt(n, 2) + '%'; }
+  function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+  function calc() {
+    const bcv   = parseFloat(document.getElementById('bcv').value) || 490;
+    const bin   = parseFloat(document.getElementById('bin').value) || 510;
+    const price = parseFloat(document.getElementById(activePrice === 'A' ? 'pA' : 'pB').value) || 100;
+
+    // === RUTA BCV ===
+    const bBasebs  = price * bcv;
+    const b30bs    = bBasebs * 1.30;
+    const b30usd   = b30bs / bcv;
+    const b30pct   = ((b30usd / price) - 1) * 100;
+    const b95bs    = bBasebs * 1.95;
+    const b95usd   = b95bs / bcv;
+    const b95pct   = ((b95usd / price) - 1) * 100;
+    const b150bs   = bBasebs * 2.50;
+    const b150usd  = b150bs / bcv;
+    const b150pct  = ((b150usd / price) - 1) * 100;
+
+    set('b-base-bs',   fmt(bBasebs, 0));
+    set('b-base-usd',  fmt(price));
+    set('b30-bs',      fmt(b30bs, 0));
+    set('b30-usd-bcv', fmt(b30usd));
+    set('b30-pct',     pct(b30pct));
+    set('b95-bs',      fmt(b95bs, 0));
+    set('b95-usd-bcv', fmt(b95usd));
+    set('b95-pct',     pct(b95pct));
+    set('b150-bs',     fmt(b150bs, 0));
+    set('b150-usd-bcv',fmt(b150usd));
+    set('b150-pct',    pct(b150pct));
+
+    // === RUTA BINANCE ===
+    const nBaseUsd   = price * 0.72;
+    const nBaseBsBin = nBaseUsd * bin;
+    const nBaseBsBcv = nBaseUsd * bcv;
+
+    const n27usd     = nBaseUsd * 1.27;
+    const n27bsBin   = n27usd * bin;
+    const n27pct     = ((n27usd / price) - 1) * 100;
+    const n27bsBcv   = n27usd * bcv;
+    const n27bcvPct  = ((n27bsBcv / bcv / price) - 1) * 100;
+
+    const n95bsBcv   = nBaseUsd * 1.95 * bcv;
+    const n95usdBcv  = n95bsBcv / bcv;
+    const n95pct     = ((n95usdBcv / price) - 1) * 100;
+
+    const n150bsBcv  = nBaseUsd * 2.50 * bcv;
+    const n150usdBcv = n150bsBcv / bcv;
+    const n150pct    = ((n150usdBcv / price) - 1) * 100;
+
+    const crossUsd   = n150bsBcv / bcv;
+    const crossPct   = ((crossUsd / price) - 1) * 100;
+
+    set('n-base-usd',    fmt(nBaseUsd));
+    set('n-base-bs-bin', fmt(nBaseBsBin, 0));
+    set('n-base-bs-bcv', fmt(nBaseBsBcv, 0));
+    set('n27-usd',       fmt(n27usd));
+    set('n27-bs-bin',    fmt(n27bsBin, 0));
+    set('n27-pct',       pct(n27pct));
+    set('n27-bs-bcv',    fmt(n27bsBcv, 0));
+    set('n27-bcv-pct',   pct(n27bcvPct));
+    set('n95-bs-bcv',    fmt(n95bsBcv, 0));
+    set('n95-usd-bcv',   fmt(n95usdBcv));
+    set('n95-pct',       pct(n95pct));
+    set('n150-bs-bcv',   fmt(n150bsBcv, 0));
+    set('n150-usd-bcv',  fmt(n150usdBcv));
+    set('n150-pct',      pct(n150pct));
+    set('cross-pct',     pct(crossPct));
+    set('cross-usd',     fmt(crossUsd));
+
+    // === COMPARATIVA ===
+    set('c-b-base',      fmt(bBasebs, 0) + ' Bs');
+    set('c-b30',         fmt(b30bs, 0) + ' Bs / ' + pct(b30pct));
+    set('c-b95',         fmt(b95bs, 0) + ' Bs / ' + pct(b95pct));
+    set('c-b150',        fmt(b150bs, 0) + ' Bs / ' + pct(b150pct));
+    set('c-n-base',      fmt(nBaseUsd) + '$');
+    set('c-n27',         fmt(n27usd) + '$ / ' + pct(n27pct));
+    set('c-n27-bcv-pct', fmt(n27bsBcv, 0) + ' Bs / ' + pct(n27bcvPct));
+    set('c-n95',         fmt(n95bsBcv, 0) + ' Bs / ' + pct(n95pct));
+    set('c-n150',        fmt(n150bsBcv, 0) + ' Bs / ' + pct(n150pct));
+    set('cc-bs',         fmt(n150bsBcv, 0));
+    set('cc-pct',        pct(crossPct));
+  }
+
+  calc();
+</script>
+</body>
+</html>
